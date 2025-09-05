@@ -191,7 +191,7 @@ export const SollPlanSection = ({ basePlan, plans, onPlansChange }: SollPlanSect
                           <SelectTrigger className="bg-input border-border text-foreground text-sm">
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent className="bg-card border-border">
+                          <SelectContent className="bg-card border-border z-50">
                             <SelectItem value="Keine">Keine</SelectItem>
                             <SelectItem value="Staplerschein">Staplerschein</SelectItem>
                             <SelectItem value="Ersthelfer">Ersthelfer</SelectItem>

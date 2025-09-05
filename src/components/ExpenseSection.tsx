@@ -84,11 +84,12 @@ export const ExpenseSection = ({ expenses, onExpensesChange }: ExpenseSectionPro
             <SelectTrigger className="bg-input border-border text-foreground">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="bg-card border-border">
+            <SelectContent className="bg-card border-border z-50">
               <SelectItem value="Einmalige Kosten">Einmalige Kosten</SelectItem>
               <SelectItem value="Pro Woche">Pro Woche</SelectItem>
+              <SelectItem value="Beliebiger Zeitraum">Beliebiger Zeitraum</SelectItem>
+              <SelectItem value="Pro Tag">Pro Tag</SelectItem>
               <SelectItem value="Pro Monat">Pro Monat</SelectItem>
-              <SelectItem value="Pro Jahr">Pro Jahr</SelectItem>
             </SelectContent>
           </Select>
           <Button 
