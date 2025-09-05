@@ -40,10 +40,38 @@ const Index = () => {
     { id: "3", name: "Flasher", employees: 3, cost: 79.99 }
   ]);
 
-  const [expenses, setExpenses] = useState([
-    { id: "1", description: "Benzinkosten", month: "01/25", cost: "25.321", interval: "Pro Monat" },
-    { id: "2", description: "Hotelkosten", month: "04/29", cost: "128.321,28", interval: "Einmalige Kosten" },
-    { id: "3", description: "Materialkosten", month: "08/24", cost: "10.223", interval: "Einmalige Kosten" }
+  const [expenses, setExpenses] = useState<any[]>([
+    { 
+      id: "1", 
+      description: "Benzinkosten", 
+      costType: "Pro Monat", 
+      cost: "25.321", 
+      month: "2025-01",
+      isPerEmployee: false,
+      category: "Transport",
+      priority: "Mittel",
+      approvalStatus: "Genehmigt"
+    },
+    { 
+      id: "2", 
+      description: "Hotelkosten", 
+      costType: "Einmalige Kosten", 
+      cost: "128.321,28", 
+      isPerEmployee: false,
+      category: "Transport",
+      priority: "Hoch", 
+      approvalStatus: "Offen"
+    },
+    { 
+      id: "3", 
+      description: "Materialkosten", 
+      costType: "Einmalige Kosten", 
+      cost: "10.223", 
+      isPerEmployee: false,
+      category: "Material",
+      priority: "Niedrig",
+      approvalStatus: "Genehmigt"
+    }
   ]);
 
   const [basePlan, setBasePlan] = useState(null);
@@ -141,7 +169,7 @@ const Index = () => {
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
                 <div className="space-y-6">
                   <AuftragFormSection formData={formData} onFormChange={handleFormChange} />
-                  <ExpenseSection expenses={expenses} onExpensesChange={setExpenses} />
+                  <ExpenseSection expenses={expenses} onExpensesChange={setExpenses} activities={activities} />
                 </div>
                 <div className="space-y-6">
                   <BudgetSection formData={formData} onFormChange={handleFormChange} />
