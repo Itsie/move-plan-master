@@ -35,9 +35,9 @@ const Index = () => {
   });
 
   const [activities, setActivities] = useState([
-    { id: "1", name: "Flasher", employees: 3, cost: 79.99, shifts: ["Frühschicht", "Tagschicht"] },
-    { id: "2", name: "Flasher", employees: 3, cost: 79.99, shifts: ["Tagschicht"] },
-    { id: "3", name: "Flasher", employees: 3, cost: 79.99, shifts: ["Frühschicht"] }
+    { id: "1", name: "Flasher", employees: 3, cost: 79.99, shift: "Frühschicht" },
+    { id: "2", name: "Kommissionierung", employees: 2, cost: 65.50, shift: "Tagschicht" },
+    { id: "3", name: "Verpackung", employees: 4, cost: 58.75, shift: "Frühschicht" }
   ]);
 
   const [expenses, setExpenses] = useState<any[]>([
