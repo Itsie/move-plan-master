@@ -3,8 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trash2, Edit, X, Clock, Users } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Trash2, Edit, X, Clock, Users, ChevronDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 
@@ -23,7 +23,6 @@ interface TaetigkeitSectionProps {
 }
 
 export const TaetigkeitSection = ({ activities, onActivitiesChange, formData }: TaetigkeitSectionProps) => {
-  const [activeShift, setActiveShift] = useState<string>('');
   const [newActivities, setNewActivities] = useState<{ [key: string]: { name: string; employees: string; cost: string } }>({});
 
   const getEnabledShifts = () => {
@@ -36,11 +35,6 @@ export const TaetigkeitSection = ({ activities, onActivitiesChange, formData }: 
   };
 
   const enabledShifts = getEnabledShifts();
-
-  // Set active shift if not set and shifts available
-  if (!activeShift && enabledShifts.length > 0) {
-    setActiveShift(enabledShifts[0].key);
-  }
 
   const addActivity = (shiftKey: string, shiftLabel: string) => {
     const newActivity = newActivities[shiftKey];
@@ -118,122 +112,111 @@ export const TaetigkeitSection = ({ activities, onActivitiesChange, formData }: 
         </span>
       </CardHeader>
       <CardContent>
-        <Tabs value={activeShift} onValueChange={setActiveShift} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-6">
-            {enabledShifts.map((shift) => (
-              <TabsTrigger 
-                key={shift.key} 
-                value={shift.key}
-                className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
-              >
-                <div className="flex flex-col items-center gap-1">
-                  <span className="text-sm">{shift.label}</span>
-                  <Badge variant="secondary" className="text-xs">
+        <Accordion type="multiple" className="w-full space-y-4" defaultValue={enabledShifts.map(s => s.key)}>
+          {enabledShifts.map((shift) => (
+            <AccordionItem key={shift.key} value={shift.key} className="border border-border rounded-lg overflow-hidden">
+              <AccordionTrigger className="px-4 py-3 bg-accent/30 hover:bg-accent/50 [&[data-state=open]>svg]:rotate-180">
+                <div className="flex items-center justify-between w-full mr-4">
+                  <div className="flex items-center gap-3">
+                    <Clock className="h-5 w-5 text-muted-foreground" />
+                    <span className="text-lg font-medium text-foreground">{shift.label}</span>
+                    {formData.shiftTimes?.[shift.key] && (
+                      <span className="text-sm text-muted-foreground">
+                        {formData.shiftTimes[shift.key].from} - {formData.shiftTimes[shift.key].to}
+                      </span>
+                    )}
+                  </div>
+                  <Badge variant="secondary" className="text-sm">
                     {getShiftEmployees(shift.label)} MA
                   </Badge>
                 </div>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          {enabledShifts.map((shift) => (
-            <TabsContent key={shift.key} value={shift.key} className="space-y-4">
-              <div className="flex items-center gap-2 mb-4">
-                <Clock className="h-5 w-5 text-muted-foreground" />
-                <h3 className="text-lg font-medium text-foreground">{shift.label}</h3>
-                <div className="text-sm text-muted-foreground">
-                  {formData.shiftTimes?.[shift.key] && (
-                    <span>
-                      {formData.shiftTimes[shift.key].from} - {formData.shiftTimes[shift.key].to}
-                    </span>
-                  )}
+              </AccordionTrigger>
+              <AccordionContent className="px-4 pb-4 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+                  <Input
+                    placeholder="Tätigkeit"
+                    value={newActivities[shift.key]?.name || ''}
+                    onChange={(e) => updateNewActivity(shift.key, 'name', e.target.value)}
+                    className="bg-input border-border text-foreground"
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Soll MA"
+                    value={newActivities[shift.key]?.employees || ''}
+                    onChange={(e) => updateNewActivity(shift.key, 'employees', e.target.value)}
+                    className="bg-input border-border text-foreground"
+                  />
+                  <Input
+                    type="number"
+                    step="0.01"
+                    placeholder="Kosten"
+                    value={newActivities[shift.key]?.cost || ''}
+                    onChange={(e) => updateNewActivity(shift.key, 'cost', e.target.value)}
+                    className="bg-input border-border text-foreground"
+                  />
+                  <Button 
+                    onClick={() => addActivity(shift.key, shift.label)}
+                    variant="secondary"
+                    className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                  >
+                    Hinzufügen
+                  </Button>
                 </div>
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                <Input
-                  placeholder="Tätigkeit"
-                  value={newActivities[shift.key]?.name || ''}
-                  onChange={(e) => updateNewActivity(shift.key, 'name', e.target.value)}
-                  className="bg-input border-border text-foreground"
-                />
-                <Input
-                  type="number"
-                  placeholder="Soll MA"
-                  value={newActivities[shift.key]?.employees || ''}
-                  onChange={(e) => updateNewActivity(shift.key, 'employees', e.target.value)}
-                  className="bg-input border-border text-foreground"
-                />
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="Kosten"
-                  value={newActivities[shift.key]?.cost || ''}
-                  onChange={(e) => updateNewActivity(shift.key, 'cost', e.target.value)}
-                  className="bg-input border-border text-foreground"
-                />
-                <Button 
-                  onClick={() => addActivity(shift.key, shift.label)}
-                  variant="secondary"
-                  className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
-                >
-                  Hinzufügen
-                </Button>
-              </div>
-
-              <div className="rounded-md border border-border overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-accent/50 border-border">
-                      <TableHead className="text-muted-foreground font-medium">Tätigkeit</TableHead>
-                      <TableHead className="text-right text-muted-foreground font-medium">Details & Aktionen</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {getActivitiesForShift(shift.label).map((activity) => (
-                      <TableRow key={activity.id} className="border-border hover:bg-accent/20">
-                        <TableCell className="font-medium text-foreground">
-                          {activity.name}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <span className="text-muted-foreground text-sm">
-                              {activity.employees} MA - {activity.cost.toFixed(2)} €
-                            </span>
-                            <div className="flex gap-1">
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                className="h-6 w-6 text-muted-foreground hover:text-info"
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                                onClick={() => removeActivity(activity.id)}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
+                <div className="rounded-md border border-border overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="bg-accent/50 border-border">
+                        <TableHead className="text-muted-foreground font-medium">Tätigkeit</TableHead>
+                        <TableHead className="text-right text-muted-foreground font-medium">Details & Aktionen</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {getActivitiesForShift(shift.label).map((activity) => (
+                        <TableRow key={activity.id} className="border-border hover:bg-accent/20">
+                          <TableCell className="font-medium text-foreground">
+                            {activity.name}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <span className="text-muted-foreground text-sm">
+                                {activity.employees} MA - {activity.cost.toFixed(2)} €
+                              </span>
+                              <div className="flex gap-1">
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-6 w-6 text-muted-foreground hover:text-info"
+                                >
+                                  <Edit className="h-3 w-3" />
+                                </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon"
+                                  className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                                  onClick={() => removeActivity(activity.id)}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {getActivitiesForShift(shift.label).length === 0 && (
-                      <TableRow>
-                        <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
-                          Keine Tätigkeiten für {shift.label} hinzugefügt
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </TabsContent>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {getActivitiesForShift(shift.label).length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={2} className="text-center text-muted-foreground py-8">
+                            Keine Tätigkeiten für {shift.label} hinzugefügt
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
           ))}
-        </Tabs>
+        </Accordion>
       </CardContent>
     </Card>
   );
