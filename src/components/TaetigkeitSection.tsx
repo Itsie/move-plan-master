@@ -3,7 +3,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Trash2, Edit, X } from "lucide-react";
+import { Trash2, Edit, X, Clock } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 
 interface Activity {
@@ -11,18 +13,20 @@ interface Activity {
   name: string;
   employees: number;
   cost: number;
+  shifts: string[];
 }
 
 interface TaetigkeitSectionProps {
   activities: Activity[];
   onActivitiesChange: (activities: Activity[]) => void;
+  formData: any;
 }
 
-export const TaetigkeitSection = ({ activities, onActivitiesChange }: TaetigkeitSectionProps) => {
-  const [newActivity, setNewActivity] = useState({ name: '', employees: '', cost: '' });
+export const TaetigkeitSection = ({ activities, onActivitiesChange, formData }: TaetigkeitSectionProps) => {
+  const [newActivity, setNewActivity] = useState({ name: '', employees: '', cost: '', shifts: [] as string[] });
 
   const addActivity = () => {
-    if (!newActivity.name || !newActivity.employees || !newActivity.cost) {
+    if (!newActivity.name || !newActivity.employees || !newActivity.cost || newActivity.shifts.length === 0) {
       return;
     }
 
@@ -30,11 +34,30 @@ export const TaetigkeitSection = ({ activities, onActivitiesChange }: Taetigkeit
       id: Date.now().toString(),
       name: newActivity.name,
       employees: parseFloat(newActivity.employees),
-      cost: parseFloat(newActivity.cost)
+      cost: parseFloat(newActivity.cost),
+      shifts: newActivity.shifts
     };
 
     onActivitiesChange([...activities, activity]);
-    setNewActivity({ name: '', employees: '', cost: '' });
+    setNewActivity({ name: '', employees: '', cost: '', shifts: [] });
+  };
+
+  const getAvailableShifts = () => {
+    const enabledShifts = [];
+    if (formData.shifts?.fruehschicht) enabledShifts.push('Frühschicht');
+    if (formData.shifts?.spaetschicht) enabledShifts.push('Spätschicht');
+    if (formData.shifts?.nachtschicht) enabledShifts.push('Nachtschicht');
+    if (formData.shifts?.tagschicht) enabledShifts.push('Tagschicht');
+    return enabledShifts;
+  };
+
+  const toggleShift = (shift: string) => {
+    setNewActivity({
+      ...newActivity,
+      shifts: newActivity.shifts.includes(shift)
+        ? newActivity.shifts.filter(s => s !== shift)
+        : [...newActivity.shifts, shift]
+    });
   };
 
   const removeActivity = (id: string) => {
@@ -54,35 +77,60 @@ export const TaetigkeitSection = ({ activities, onActivitiesChange }: Taetigkeit
         </span>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-          <Input
-            placeholder="Tätigkeit"
-            value={newActivity.name}
-            onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })}
-            className="bg-input border-border text-foreground"
-          />
-          <Input
-            type="number"
-            placeholder="Soll MA"
-            value={newActivity.employees}
-            onChange={(e) => setNewActivity({ ...newActivity, employees: e.target.value })}
-            className="bg-input border-border text-foreground"
-          />
-          <Input
-            type="number"
-            step="0.01"
-            placeholder="Kosten"
-            value={newActivity.cost}
-            onChange={(e) => setNewActivity({ ...newActivity, cost: e.target.value })}
-            className="bg-input border-border text-foreground"
-          />
-          <Button 
-            onClick={addActivity}
-            variant="secondary"
-            className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
-          >
-            Hinzufügen
-          </Button>
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
+            <Input
+              placeholder="Tätigkeit"
+              value={newActivity.name}
+              onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })}
+              className="bg-input border-border text-foreground"
+            />
+            <Input
+              type="number"
+              placeholder="Soll MA"
+              value={newActivity.employees}
+              onChange={(e) => setNewActivity({ ...newActivity, employees: e.target.value })}
+              className="bg-input border-border text-foreground"
+            />
+            <Input
+              type="number"
+              step="0.01"
+              placeholder="Kosten"
+              value={newActivity.cost}
+              onChange={(e) => setNewActivity({ ...newActivity, cost: e.target.value })}
+              className="bg-input border-border text-foreground"
+            />
+            <Button 
+              onClick={addActivity}
+              variant="secondary"
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/80"
+            >
+              Hinzufügen
+            </Button>
+          </div>
+          
+          {getAvailableShifts().length > 0 && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-foreground flex items-center gap-2">
+                <Clock className="h-4 w-4" />
+                Schichten für diese Tätigkeit
+              </Label>
+              <div className="flex flex-wrap gap-2">
+                {getAvailableShifts().map((shift) => (
+                  <div key={shift} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`shift-${shift}`}
+                      checked={newActivity.shifts.includes(shift)}
+                      onCheckedChange={() => toggleShift(shift)}
+                    />
+                    <Label htmlFor={`shift-${shift}`} className="text-sm text-muted-foreground">
+                      {shift}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="rounded-md border border-border overflow-hidden">
@@ -100,27 +148,38 @@ export const TaetigkeitSection = ({ activities, onActivitiesChange }: Taetigkeit
                     {activity.name}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="text-muted-foreground text-sm">
-                        {activity.employees} Mitarbeiter - {activity.cost.toFixed(2)} €
-                      </span>
-                      <div className="flex gap-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="h-6 w-6 text-muted-foreground hover:text-info"
-                        >
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          className="h-6 w-6 text-muted-foreground hover:text-destructive"
-                          onClick={() => removeActivity(activity.id)}
-                        >
-                          <X className="h-3 w-3" />
-                        </Button>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-end gap-2">
+                        <span className="text-muted-foreground text-sm">
+                          {activity.employees} Mitarbeiter - {activity.cost.toFixed(2)} €
+                        </span>
+                        <div className="flex gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-info"
+                          >
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                            onClick={() => removeActivity(activity.id)}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
+                      {activity.shifts && activity.shifts.length > 0 && (
+                        <div className="flex flex-wrap gap-1 justify-end">
+                          {activity.shifts.map((shift) => (
+                            <Badge key={shift} variant="secondary" className="text-xs">
+                              {shift}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

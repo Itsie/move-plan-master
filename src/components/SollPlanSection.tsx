@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Edit, Calendar, Users } from "lucide-react";
+import { X, Edit, Calendar, Users, Clock } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
 
 interface PlanEntry {
@@ -14,6 +15,7 @@ interface PlanEntry {
   qualification: string;
   employees: number;
   cost: number;
+  shifts: string[];
 }
 
 interface Plan {
@@ -47,7 +49,8 @@ export const SollPlanSection = ({ basePlan, plans, onPlansChange }: SollPlanSect
       activity: '',
       qualification: 'Keine',
       employees: 1,
-      cost: 25.50
+      cost: 25.50,
+      shifts: []
     };
     setNewPlan({
       ...newPlan,
@@ -127,6 +130,21 @@ export const SollPlanSection = ({ basePlan, plans, onPlansChange }: SollPlanSect
     return new Date(dateStr).toLocaleDateString('de-DE');
   };
 
+  const getAvailableShifts = () => {
+    return ['Frühschicht', 'Spätschicht', 'Nachtschicht', 'Tagschicht'];
+  };
+
+  const toggleEntryShift = (entryId: string, shift: string) => {
+    const entry = newPlan.entries.find(e => e.id === entryId);
+    if (!entry) return;
+    
+    const newShifts = entry.shifts.includes(shift)
+      ? entry.shifts.filter(s => s !== shift)
+      : [...entry.shifts, shift];
+    
+    updatePlanEntry(entryId, 'shifts', newShifts);
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
       {/* Editor Section */}
@@ -169,6 +187,7 @@ export const SollPlanSection = ({ basePlan, plans, onPlansChange }: SollPlanSect
                     <TableHead className="text-muted-foreground">Qualifikation</TableHead>
                     <TableHead className="text-center text-muted-foreground">Soll MA</TableHead>
                     <TableHead className="text-right text-muted-foreground">Kosten/MA (€)</TableHead>
+                    <TableHead className="text-muted-foreground">Schichten</TableHead>
                     <TableHead className="w-12"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -219,6 +238,25 @@ export const SollPlanSection = ({ basePlan, plans, onPlansChange }: SollPlanSect
                         />
                       </TableCell>
                       <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex flex-wrap gap-1">
+                            {getAvailableShifts().map((shift) => (
+                              <div key={shift} className="flex items-center space-x-1">
+                                <Checkbox
+                                  id={`${entry.id}-${shift}`}
+                                  checked={entry.shifts?.includes(shift) || false}
+                                  onCheckedChange={() => toggleEntryShift(entry.id, shift)}
+                                  className="h-3 w-3"
+                                />
+                                <Label htmlFor={`${entry.id}-${shift}`} className="text-xs text-muted-foreground">
+                                  {shift.charAt(0)}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -232,7 +270,7 @@ export const SollPlanSection = ({ basePlan, plans, onPlansChange }: SollPlanSect
                   ))}
                   {newPlan.entries.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
                         Keine Einträge vorhanden
                       </TableCell>
                     </TableRow>
@@ -331,14 +369,24 @@ export const SollPlanSection = ({ basePlan, plans, onPlansChange }: SollPlanSect
                         )}
                       </div>
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      {plan.entries.map((entry, index) => (
-                        <div key={entry.id} className="flex items-center gap-1">
-                          <Users className="h-3 w-3" />
-                          <span>
-                            {entry.activity} ({entry.employees} MA)
-                          </span>
-                          {index < plan.entries.length - 1 && <span className="mx-1">•</span>}
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      {plan.entries.map((entry) => (
+                        <div key={entry.id} className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-1">
+                            <Users className="h-3 w-3" />
+                            <span>
+                              {entry.activity} ({entry.employees} MA)
+                            </span>
+                          </div>
+                          {entry.shifts && entry.shifts.length > 0 && (
+                            <div className="flex gap-1">
+                              {entry.shifts.map((shift) => (
+                                <Badge key={shift} variant="outline" className="text-xs">
+                                  {shift.charAt(0)}
+                                </Badge>
+                              ))}
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -395,6 +443,7 @@ export const SollPlanSection = ({ basePlan, plans, onPlansChange }: SollPlanSect
                       <TableHead className="text-muted-foreground text-xs">Tätigkeit</TableHead>
                       <TableHead className="text-muted-foreground text-xs">Qualifikation</TableHead>
                       <TableHead className="text-center text-muted-foreground text-xs">Soll MA</TableHead>
+                      <TableHead className="text-muted-foreground text-xs">Schichten</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -403,6 +452,19 @@ export const SollPlanSection = ({ basePlan, plans, onPlansChange }: SollPlanSect
                         <TableCell className="text-foreground text-sm">{activity.name}</TableCell>
                         <TableCell className="text-muted-foreground text-sm">Keine</TableCell>
                         <TableCell className="text-center text-foreground text-sm">{activity.employees}</TableCell>
+                        <TableCell className="text-sm">
+                          {activity.shifts && activity.shifts.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {activity.shifts.map((shift: string) => (
+                                <Badge key={shift} variant="secondary" className="text-xs">
+                                  {shift}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">Keine</span>
+                          )}
+                        </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

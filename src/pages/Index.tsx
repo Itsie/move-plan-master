@@ -35,9 +35,9 @@ const Index = () => {
   });
 
   const [activities, setActivities] = useState([
-    { id: "1", name: "Flasher", employees: 3, cost: 79.99 },
-    { id: "2", name: "Flasher", employees: 3, cost: 79.99 },
-    { id: "3", name: "Flasher", employees: 3, cost: 79.99 }
+    { id: "1", name: "Flasher", employees: 3, cost: 79.99, shifts: ["Frühschicht", "Tagschicht"] },
+    { id: "2", name: "Flasher", employees: 3, cost: 79.99, shifts: ["Tagschicht"] },
+    { id: "3", name: "Flasher", employees: 3, cost: 79.99, shifts: ["Frühschicht"] }
   ]);
 
   const [expenses, setExpenses] = useState<any[]>([
@@ -173,7 +173,7 @@ const Index = () => {
                 </div>
                 <div className="space-y-6">
                   <BudgetSection formData={formData} onFormChange={handleFormChange} />
-                  <TaetigkeitSection activities={activities} onActivitiesChange={setActivities} />
+                  <TaetigkeitSection activities={activities} onActivitiesChange={setActivities} formData={formData} />
                 </div>
               </div>
 
